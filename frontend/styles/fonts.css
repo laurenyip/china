@@ -1,0 +1,12 @@
+@font-face {
+  font-family: 'Vogue Bold Italic';
+  src: url('/Vogue_Bold_Italic.otf') format('opentype');
+  font-weight: bold;
+  font-style: italic;
+}
+.heading-vogue {
+  font-family: 'Vogue Bold Italic', serif;
+  font-weight: bold;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}

@@ -52,4 +52,11 @@ def add_word(word: schemas.CharacterCreate, db: Session = Depends(get_db)):
 def get_characters(db: Session = Depends(get_db)):
     return crud.get_characters(db)
 
+@app.delete("/characters/{id}", response_model=schemas.Character)
+def delete_character(id: int, db: Session = Depends(get_db)):
+    deleted = crud.delete_character(db, id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return deleted
+
 

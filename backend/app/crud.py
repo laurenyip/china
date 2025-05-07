@@ -13,3 +13,11 @@ def create_character(db: Session, character: schemas.CharacterCreate):
     db.commit()
     db.refresh(db_character)
     return db_character
+
+def delete_character(db: Session, character_id: int):
+    db_character = db.query(models.Character).filter(models.Character.id == character_id).first()
+    if db_character:
+        db.delete(db_character)
+        db.commit()
+        return db_character
+    return None
