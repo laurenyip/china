@@ -4,41 +4,52 @@ interface TreeCardLayoutProps {
   cards: React.ReactNode[];
 }
 
-// Levels: [2, 8, 8, 18, ...] (bottom-up)
+// Levels: [18, 8, 8, 4, 2] (bottom-up, widest at top, root at bottom)
 function getTreeLevels(cards: React.ReactNode[]): React.ReactNode[][] {
-  const levels: number[] = [2, 8, 8, 18];
+  const levels = [8, 8, 8, 4, 2]; // bottom-up
   let result: React.ReactNode[][] = [];
   let remaining = cards.length;
   let idx = 0;
   let start = 0;
   while (remaining > 0) {
-    const count = levels[idx] || 18; // After level 4, keep adding 18 at the top
+    // After the first 5 rows, keep adding 18 at the top
+    const count = idx < levels.length ? levels[idx] : 18;
     const end = start + count;
     result.push(cards.slice(start, end));
     remaining -= (end - start);
     start = end;
-    idx = Math.min(idx + 1, levels.length - 1);
+    idx++;
   }
-  return result.reverse(); // So that smallest row is at the bottom
+  return result.reverse(); // So that the widest row is at the top
 }
 
 const connectorColor = "#142a63"; // dark blue
 
+import { FlipCard } from "./FlipCard";
+
 export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
   const levels = getTreeLevels(cards);
   // Calculate positions for SVG lines
-  const cardWidth = 200; // px (smaller for space efficiency)
-  const cardHeight = 240; // px
-  const vSpacing = 40; // px vertical space between levels
+  // Responsive card size and gap based on viewport
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  const maxRowLen = Math.max(...levels.map(l => l.length));
+  const maxCardWidth = 110;
+  const minCardWidth = 60;
+  const maxGap = 40;
+  const minGap = 12;
+  // Calculate cardWidth and gap so that the widest row fits the viewport
+  let cardWidth = Math.min(maxCardWidth, Math.max(minCardWidth, Math.floor((viewportWidth - (maxRowLen - 1) * minGap) / maxRowLen) - minGap));
+  let gap = Math.max(minGap, Math.min(maxGap, Math.floor((viewportWidth - maxRowLen * cardWidth) / (maxRowLen - 1))));
+  const cardHeight = cardWidth; // keep square
+  const vSpacing = cardHeight * 0.4 + 14; // vertical space between levels
 
   // Get card positions for each level (bottom row is smallest, tree grows upward)
-  const maxRowLen = Math.max(...levels.map(l => l.length));
   const totalHeight = levels.length * (cardHeight + vSpacing);
   const positions: { x: number; y: number }[][] = levels.map((row, i) => {
-    const totalWidth = row.length * cardWidth + (row.length - 1) * 16;
-    const x0 = (maxRowLen * cardWidth + (maxRowLen - 1) * 16 - totalWidth) / 2;
+    const totalWidth = row.length * cardWidth + (row.length - 1) * gap;
+    const x0 = (viewportWidth - totalWidth) / 2;
     // y = totalHeight - (i+1)*(cardHeight+vSpacing) so bottom row is at bottom
-    return row.map((_, j) => ({ x: x0 + j * (cardWidth + 16), y: totalHeight - (i + 1) * (cardHeight + vSpacing) }));
+    return row.map((_, j) => ({ x: x0 + j * (cardWidth + gap), y: totalHeight - (i + 1) * (cardHeight + vSpacing) }));
   });
 
   // Collect SVG paths for connectors
@@ -83,14 +94,35 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
         {connectors}
       </svg>
       {positions.map((row, i) =>
-        row.map((pos, j) => (
-          <div
-            key={`card-${i}-${j}`}
-            style={{ position: "absolute", left: pos.x, top: pos.y, zIndex: 1 }}
-          >
-            {levels[i][j]}
-          </div>
-        ))
+        row.map((pos, j) => {
+          const card = levels[i][j];
+          // Expect card to be an object with character, pinyin, definition, notes
+          // If not, just render as is
+          if (card && typeof card === "object" && "props" in card && card.props.character) {
+            return (
+              <div
+                key={`card-${i}-${j}`}
+                style={{ position: "absolute", left: pos.x, top: pos.y, zIndex: 1 }}
+              >
+                <FlipCard
+                  character={card.props.character}
+                  pinyin={card.props.pinyin}
+                  definition={card.props.definition}
+                  notes={card.props.note || card.props.notes}
+                  onNoteChange={card.props.onNoteChange}
+                />
+              </div>
+            );
+          }
+          return (
+            <div
+              key={`card-${i}-${j}`}
+              style={{ position: "absolute", left: pos.x, top: pos.y, zIndex: 1 }}
+            >
+              {card}
+            </div>
+          );
+        })
       )}
     </div>
   );

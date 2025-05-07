@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TiltCard } from '../components/TiltCard';
 import { TreeCardLayout } from '../components/TreeCardLayout';
+import { FlipCard } from '../components/FlipCard';
 
 interface Character {
   id?: number;
@@ -148,24 +149,14 @@ export default function Home() {
             {/* TreeCardLayout for tree display */}
             <TreeCardLayout
               cards={known.map((word) => (
-                <TiltCard
+                <FlipCard
                   key={word.id}
                   character={word.character}
                   pinyin={edits[word.id ?? word.character]?.pinyin ?? word.pinyin}
                   definition={edits[word.id ?? word.character]?.definition ?? word.definition}
-                  created_at={word.created_at}
-                  note={notes[word.id ?? word.character] || ''}
+                  notes={notes[word.id ?? word.character] || ''}
                   onNoteChange={val => setNotes(prev => ({ ...prev, [word.id ?? word.character]: val }))}
                   onRemove={() => handleRemove(word.id)}
-                  editable
-                  onPinyinChange={val => setEdits(prev => {
-                    const current = prev[word.id ?? word.character] || { pinyin: word.pinyin || '', definition: word.definition || '' };
-                    return { ...prev, [word.id ?? word.character]: { pinyin: val, definition: current.definition } };
-                  })}
-                  onDefinitionChange={val => setEdits(prev => {
-                    const current = prev[word.id ?? word.character] || { pinyin: word.pinyin || '', definition: word.definition || '' };
-                    return { ...prev, [word.id ?? word.character]: { pinyin: current.pinyin, definition: val } };
-                  })}
                 />
               ))}
             />
