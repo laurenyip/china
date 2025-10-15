@@ -21,3 +21,12 @@ def delete_character(db: Session, character_id: int):
         db.commit()
         return db_character
     return None
+
+def search_characters(db: Session, query: str):
+    """Search characters by character, pinyin, or definition"""
+    search_term = f"%{query}%"
+    return db.query(models.Character).filter(
+        (models.Character.character.like(search_term)) |
+        (models.Character.pinyin.like(search_term)) |
+        (models.Character.definition.like(search_term))
+    ).all()

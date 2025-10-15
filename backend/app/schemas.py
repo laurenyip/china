@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class CharacterBase(BaseModel):
     character: str
@@ -16,5 +17,6 @@ class CharacterCreate(CharacterBase):
 
 class Character(CharacterBase):
     id: int
+    created_at: Optional[datetime] = None
     class Config:
         orm_mode = True

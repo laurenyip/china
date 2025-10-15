@@ -4,9 +4,27 @@
   font-weight: bold;
   font-style: italic;
 }
+
+@font-face {
+  font-family: 'MF Yansong';
+  src: url('/yan.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap');
+
 .heading-vogue {
   font-family: 'Vogue Bold Italic', serif;
   font-weight: bold;
   font-style: italic;
   letter-spacing: 0.04em;
+}
+
+.font-yansong {
+  font-family: 'MF Yansong', serif;
+}
+
+.font-roboto-mono {
+  font-family: 'Roboto Mono', monospace;
 }

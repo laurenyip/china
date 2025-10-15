@@ -59,4 +59,11 @@ def delete_character(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Character not found")
     return deleted
 
+@app.get("/search", response_model=List[schemas.Character])
+def search_characters(q: str, db: Session = Depends(get_db)):
+    """Search characters by character, pinyin, or definition"""
+    if not q.strip():
+        return crud.get_characters(db)
+    return crud.search_characters(db, q.strip())
+
 

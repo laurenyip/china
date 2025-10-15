@@ -19,3 +19,7 @@ A comprehensive Chinese learning platform featuring character repository, Canto/
 - Implement character CRUD API
 - Connect frontend to backend
 - Add LLM, subtitling, and book processing features
+
+
+backend: python -m uvicorn app.main:app --reload
+frontend: npm run dev

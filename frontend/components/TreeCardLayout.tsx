@@ -1,29 +1,37 @@
 import * as React from "react";
+import { JSX } from "react";
 
 interface TreeCardLayoutProps {
   cards: React.ReactNode[];
 }
 
-// Levels: [18, 8, 8, 4, 2] (bottom-up, widest at top, root at bottom)
+// Custom tree logic: bottom is narrower (4 words), top has more capacity (8 words per row)
+// New words are added to the top of the tree
 function getTreeLevels(cards: React.ReactNode[]): React.ReactNode[][] {
-  const levels = [8, 8, 8, 4, 2]; // bottom-up
-  let result: React.ReactNode[][] = [];
-  let remaining = cards.length;
-  let idx = 0;
-  let start = 0;
-  while (remaining > 0) {
-    // After the first 5 rows, keep adding 18 at the top
-    const count = idx < levels.length ? levels[idx] : 18;
-    const end = start + count;
-    result.push(cards.slice(start, end));
-    remaining -= (end - start);
-    start = end;
-    idx++;
+  // Reverse the cards array so newest words appear at the top
+  const reversedCards = [...cards].reverse();
+  
+  if (reversedCards.length <= 4) {
+    return [reversedCards];
+  } else {
+    // Bottom layer: 4 cards (root, horizontal)
+    const bottomLayer = reversedCards.slice(reversedCards.length - 4);
+    
+    // Remaining cards go to upper layers, 8 per row
+    const remainingCards = reversedCards.slice(0, reversedCards.length - 4);
+    const upperLayers: React.ReactNode[][] = [];
+    
+    // Create layers of 8 cards each for the remaining cards
+    for (let i = 0; i < remainingCards.length; i += 8) {
+      upperLayers.push(remainingCards.slice(i, i + 8));
+    }
+    
+    // Return with bottom layer at the end (bottom of the tree)
+    return [...upperLayers, bottomLayer];
   }
-  return result.reverse(); // So that the widest row is at the top
 }
 
-const connectorColor = "#142a63"; // dark blue
+const connectorColor = "#5a6a7f"; // new theme color
 
 import { FlipCard } from "./FlipCard";
 
@@ -85,7 +93,7 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
   const svgHeight = positions.length * (cardHeight + vSpacing);
 
   return (
-    <div style={{ position: "relative", width: svgWidth, height: svgHeight }}>
+    <div className="tree-container" style={{ position: "relative", width: svgWidth, height: svgHeight }}>
       <svg
         style={{ position: "absolute", top: 0, left: 0, zIndex: 0, pointerEvents: "none" }}
         width={svgWidth}
@@ -96,20 +104,30 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
       {positions.map((row, i) =>
         row.map((pos, j) => {
           const card = levels[i][j];
-          // Expect card to be an object with character, pinyin, definition, notes
-          // If not, just render as is
-          if (card && typeof card === "object" && "props" in card && card.props.character) {
+          // Expect card to be an object with character, pinyin, definition, notes, created_at
+          if (card && typeof card === "object" && "props" in card && (card as any).props.character) {
+            const props = (card as any).props;
             return (
               <div
                 key={`card-${i}-${j}`}
-                style={{ position: "absolute", left: pos.x, top: pos.y, zIndex: 1 }}
+                className={`char-node level-${Math.min(i + 1, 4)}`}
+                style={{ 
+                  position: "absolute", 
+                  left: pos.x, 
+                  top: pos.y, 
+                  zIndex: 1, 
+                  textAlign: "center",
+                  animationDelay: `${j * 0.1}s`
+                }}
               >
                 <FlipCard
-                  character={card.props.character}
-                  pinyin={card.props.pinyin}
-                  definition={card.props.definition}
-                  notes={card.props.note || card.props.notes}
-                  onNoteChange={card.props.onNoteChange}
+                  character={props.character}
+                  pinyin={props.pinyin}
+                  definition={props.definition}
+                  notes={props.note || props.notes}
+                  onNoteChange={props.onNoteChange}
+                  onRemove={props.onRemove}
+                  learnedDate={props.learnedDate}
                 />
               </div>
             );
@@ -117,7 +135,15 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
           return (
             <div
               key={`card-${i}-${j}`}
-              style={{ position: "absolute", left: pos.x, top: pos.y, zIndex: 1 }}
+              className={`char-node level-${Math.min(i + 1, 4)}`}
+              style={{ 
+                position: "absolute", 
+                left: pos.x, 
+                top: pos.y, 
+                zIndex: 1, 
+                textAlign: "center",
+                animationDelay: `${j * 0.1}s`
+              }}
             >
               {card}
             </div>

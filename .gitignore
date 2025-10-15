@@ -46,3 +46,5 @@ backend/*.pyo
 backend/*.pyd
 backend/*.sqlite3
 backend/*.db
+
+.config/
