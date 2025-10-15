@@ -8,24 +8,27 @@ interface TreeCardLayoutProps {
 // Custom tree logic: bottom is narrower (4 words), top has more capacity (8 words per row)
 // New words are added to the top of the tree
 function getTreeLevels(cards: React.ReactNode[]): React.ReactNode[][] {
-  // Reverse the cards array so newest words appear at the top
-  const reversedCards = [...cards].reverse();
-  
-  if (reversedCards.length <= 4) {
-    return [reversedCards];
+  // Don't reverse the cards array - newest words should appear at the bottom right
+  const cardsArray = [...cards];
+
+  if (cardsArray.length <= 4) {
+    // For small numbers, just return as single row, but reversed so newest is on right
+    return [cardsArray.reverse()];
   } else {
-    // Bottom layer: 4 cards (root, horizontal)
-    const bottomLayer = reversedCards.slice(reversedCards.length - 4);
-    
-    // Remaining cards go to upper layers, 8 per row
-    const remainingCards = reversedCards.slice(0, reversedCards.length - 4);
+    // Bottom layer: 4 cards (root, horizontal) - fill from right to left
+    const bottomLayer = cardsArray.slice(cardsArray.length - 4).reverse();
+
+    // Remaining cards go to upper layers, 8 per row - fill from right to left
+    const remainingCards = cardsArray.slice(0, cardsArray.length - 4);
     const upperLayers: React.ReactNode[][] = [];
-    
+
     // Create layers of 8 cards each for the remaining cards
     for (let i = 0; i < remainingCards.length; i += 8) {
-      upperLayers.push(remainingCards.slice(i, i + 8));
+      const layer = remainingCards.slice(i, i + 8);
+      // Reverse each layer so newest cards are on the right
+      upperLayers.push(layer.reverse());
     }
-    
+
     // Return with bottom layer at the end (bottom of the tree)
     return [...upperLayers, bottomLayer];
   }
@@ -41,15 +44,15 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
   // Responsive card size and gap based on viewport
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
   const maxRowLen = Math.max(...levels.map(l => l.length));
-  const maxCardWidth = 110;
-  const minCardWidth = 60;
-  const maxGap = 40;
-  const minGap = 12;
+  const maxCardWidth = 90; // Updated for card container (80px card + 10px offset)
+  const minCardWidth = 80;
+  const maxGap = 18; // Reduced gap for smaller cards
+  const minGap = 8;
   // Calculate cardWidth and gap so that the widest row fits the viewport
   let cardWidth = Math.min(maxCardWidth, Math.max(minCardWidth, Math.floor((viewportWidth - (maxRowLen - 1) * minGap) / maxRowLen) - minGap));
   let gap = Math.max(minGap, Math.min(maxGap, Math.floor((viewportWidth - maxRowLen * cardWidth) / (maxRowLen - 1))));
   const cardHeight = cardWidth; // keep square
-  const vSpacing = cardHeight * 0.4 + 14; // vertical space between levels
+  const vSpacing = cardHeight * 0.4 + 10; // vertical space between levels
 
   // Get card positions for each level (bottom row is smallest, tree grows upward)
   const totalHeight = levels.length * (cardHeight + vSpacing);
@@ -93,62 +96,73 @@ export const TreeCardLayout: React.FC<TreeCardLayoutProps> = ({ cards }) => {
   const svgHeight = positions.length * (cardHeight + vSpacing);
 
   return (
-    <div className="tree-container" style={{ position: "relative", width: svgWidth, height: svgHeight }}>
+    <div className="tree-container" style={{
+      position: "relative",
+      width: "100%",
+      height: "auto",
+      minHeight: "400px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start"
+    }}>
       <svg
         style={{ position: "absolute", top: 0, left: 0, zIndex: 0, pointerEvents: "none" }}
-        width={svgWidth}
-        height={svgHeight}
+        width="100%"
+        height="100%"
       >
         {connectors}
       </svg>
       {positions.map((row, i) =>
-        row.map((pos, j) => {
-          const card = levels[i][j];
-          // Expect card to be an object with character, pinyin, definition, notes, created_at
-          if (card && typeof card === "object" && "props" in card && (card as any).props.character) {
-            const props = (card as any).props;
+        <div key={`row-${i}`} style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: `${gap}px`,
+          marginBottom: i < positions.length - 1 ? `${vSpacing}px` : "0",
+          width: "100%"
+        }}>
+          {row.map((pos, j) => {
+            const card = levels[i][j];
+            // Expect card to be an object with character, pinyin, definition, notes, created_at
+            if (card && typeof card === "object" && "props" in card && (card as any).props.character) {
+              const props = (card as any).props;
+              return (
+                <div
+                  key={`card-${i}-${j}`}
+                  className={`char-node level-${Math.min(i + 1, 4)}`}
+                  style={{
+                    zIndex: 1,
+                    textAlign: "center",
+                    animationDelay: `${j * 0.1}s`
+                  }}
+                >
+                  <FlipCard
+                    character={props.character}
+                    pinyin={props.pinyin}
+                    definition={props.definition}
+                    notes={props.note || props.notes}
+                    onNoteChange={props.onNoteChange}
+                    onRemove={props.onRemove}
+                    learnedDate={props.learnedDate}
+                  />
+                </div>
+              );
+            }
             return (
               <div
                 key={`card-${i}-${j}`}
                 className={`char-node level-${Math.min(i + 1, 4)}`}
-                style={{ 
-                  position: "absolute", 
-                  left: pos.x, 
-                  top: pos.y, 
-                  zIndex: 1, 
+                style={{
+                  zIndex: 1,
                   textAlign: "center",
                   animationDelay: `${j * 0.1}s`
                 }}
               >
-                <FlipCard
-                  character={props.character}
-                  pinyin={props.pinyin}
-                  definition={props.definition}
-                  notes={props.note || props.notes}
-                  onNoteChange={props.onNoteChange}
-                  onRemove={props.onRemove}
-                  learnedDate={props.learnedDate}
-                />
+                {card}
               </div>
             );
-          }
-          return (
-            <div
-              key={`card-${i}-${j}`}
-              className={`char-node level-${Math.min(i + 1, 4)}`}
-              style={{ 
-                position: "absolute", 
-                left: pos.x, 
-                top: pos.y, 
-                zIndex: 1, 
-                textAlign: "center",
-                animationDelay: `${j * 0.1}s`
-              }}
-            >
-              {card}
-            </div>
-          );
-        })
+          })}
+        </div>
       )}
     </div>
   );

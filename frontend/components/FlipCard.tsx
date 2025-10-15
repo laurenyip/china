@@ -1,5 +1,4 @@
 import * as React from "react";
-import styles from "./FlipCard.module.css";
 
 interface FlipCardProps {
   character: string;
@@ -11,138 +10,135 @@ interface FlipCardProps {
   learnedDate?: string;
 }
 
-export const FlipCard: React.FC<FlipCardProps> = ({ character, pinyin, definition, notes, onNoteChange, onRemove, learnedDate }) => {
+export const FlipCard: React.FC<FlipCardProps> = ({
+  character,
+  pinyin,
+  definition,
+  notes,
+  onNoteChange,
+  onRemove,
+  learnedDate
+}) => {
   const [flipped, setFlipped] = React.useState(false);
 
   return (
     <div
-      className={flipped ? `${styles.flipCard} ${styles.flipped}` : styles.flipCard}
+      className="card-container"
+      style={{
+        display: 'inline-block',
+        position: 'relative',
+        width: '90px',
+        height: '90px'
+      }}
       onClick={() => setFlipped(f => !f)}
     >
-      <div className={styles.flipCardInner}>
-        <div className={styles.flipCardFront}>
-          <span className="char-node">{character}</span>
+      {/* Card Back (Blue base) */}
+      <div
+        className="card-back"
+        style={{
+          background: '#6b7a8f',
+          border: '8px solid #5a6a7f',
+          borderRadius: '20px',
+          padding: '0.75rem',
+          width: '80px',
+          height: '80px',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+        }}
+      >
+        <div
+          className="card-label"
+          style={{
+            position: 'absolute',
+            top: '-1.5rem',
+            left: '0.75rem',
+            fontSize: '0.7rem',
+            color: '#b8b8b8',
+            background: 'transparent',
+            padding: '0.2rem 0',
+            whiteSpace: 'nowrap',
+            fontWeight: '400'
+          }}
+        >
+          {learnedDate ? new Date(learnedDate).toLocaleDateString() : ''}
         </div>
-        <div className={styles.flipCardBack}>
-          {/* Delete X button in top-right */}
-          {onRemove && (
-            <button
-              type="button"
-              aria-label="Delete"
-              onClick={e => { e.stopPropagation(); onRemove(); }}
-              style={{ 
-                position: 'absolute', 
-                top: 8, 
-                right: 12, 
-                background: 'rgba(90, 106, 127, 0.1)', 
-                border: 'none', 
-                color: '#5a6a7f', 
-                fontSize: '1.1rem', 
-                fontWeight: 'bold', 
-                cursor: 'pointer', 
-                zIndex: 2, 
-                lineHeight: 1,
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(90, 106, 127, 0.2)';
-                e.currentTarget.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(90, 106, 127, 0.1)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              ×
-            </button>
-          )}
-          <div className={styles.flipCardInfo}>
-            {/* Character */}
-            <div style={{ 
-              fontSize: '26px', 
-              fontFamily: 'MF Yansong, serif', 
-              fontWeight: 'bold', 
-              color: '#5a6a7f', 
-              lineHeight: 1
-            }}>
-              {character}
-            </div>
-            
-            {/* Definition (larger font) */}
-            <div style={{ 
-              fontSize: '12px', 
-              fontFamily: 'Roboto Mono, monospace',
-              color: '#333', 
-              lineHeight: '1.2',
-              textAlign: 'center',
-              wordBreak: 'break-word'
-            }}>
-              {definition}
-            </div>
-            
-            {/* Pinyin with speaker icon on the right */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              width: '100%',
-              fontSize: '14px',
-              fontFamily: 'Roboto Mono, monospace',
-              color: '#5a6a7f'
-            }}>
-              <span>{pinyin}</span>
-              <button
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  background: 'rgba(90, 106, 127, 0.1)',
-                  border: '1px solid rgba(90, 106, 127, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // TODO: Add audio functionality
-                }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Notes textarea */}
-            <textarea
-              value={notes || ''}
-              placeholder="Note..."
-              style={{ 
-                width: '100%', 
-                height: '20px', 
-                fontSize: '8px', 
-                borderRadius: 4, 
-                border: '1px solid rgba(90, 106, 127, 0.2)', 
-                padding: '2px', 
-                resize: 'none', 
-                textAlign: 'center',
-                background: 'rgba(255, 255, 255, 0.8)',
-                color: '#333',
-                fontFamily: 'Roboto Mono, monospace',
-                lineHeight: '1.2'
-              }}
-              onClick={e => e.stopPropagation()}
-              onChange={e => onNoteChange && onNoteChange(e.target.value)}
-            />
-          </div>
+        <div
+          className="character"
+          style={{
+            fontSize: '2rem',
+            fontWeight: '600',
+            color: '#ffffff',
+            lineHeight: 1,
+            fontFamily: 'MF Yansong, serif'
+          }}
+        >
+          {character}
+        </div>
+      </div>
+
+      {/* Card Front (White overlay) */}
+      <div
+        className="card-front"
+        style={{
+          background: 'white',
+          border: '8px solid #6b7a8f',
+          borderRadius: '20px',
+          padding: '0.75rem',
+          width: '80px',
+          height: '80px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+          position: 'absolute',
+          top: '5px',
+          left: '5px',
+          zIndex: 2,
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+        }}
+      >
+        <div
+          className="card-label"
+          style={{
+            position: 'absolute',
+            top: '-1.5rem',
+            right: '0.5rem',
+            fontSize: '0.7rem',
+            color: '#b8b8b8',
+            background: 'transparent',
+            padding: '0.2rem 0',
+            whiteSpace: 'nowrap',
+            fontWeight: '400'
+          }}
+        >
+          {learnedDate ? new Date(learnedDate).toLocaleDateString() : ''}
+        </div>
+        <div
+          className="character"
+          style={{
+            fontSize: '2rem',
+            fontWeight: '600',
+            color: '#000000',
+            lineHeight: 1,
+            fontFamily: 'MF Yansong, serif'
+          }}
+        >
+          {character}
         </div>
       </div>
     </div>
